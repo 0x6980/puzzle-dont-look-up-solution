@@ -14,8 +14,15 @@ pub fn main() {
     let invalid_witness = FieldElement::new(vec![1<<15], p, irr.clone()); 
 
     /* BEGIN HACK */
-    let witness = vec![];
-    let m = vec![FieldElement::new(vec![0], p, irr.clone()); 1<<6]; 
+    let mut witness = vec![];
+    for _ in 0..70937  {
+        witness.push(invalid_witness.clone());
+    }
+    for i in 0..1 << 6 {
+        witness.push(FieldElement::new(vec![i], p, irr.clone()));
+    }
+    let mut m = vec![FieldElement::new(vec![0], p, irr.clone()); 1<<6]; 
+    // m generated at line 43
     /* END HACK */
 
     let mut table = vec![];
@@ -25,18 +32,20 @@ pub fn main() {
 
     let l = witness.len(); // witness length
     let t = table.len(); // table size
-    assert!(witness.contains(&invalid_witness));
+    assert!(witness.contains(&invalid_witness.clone()));
 
     let protocol = Protocol::new(l, t, p, irr.clone());
 
     let statement = Statement::new(&table);
 
     let w = Witness::new(&witness);
-
+    // generate m
+    m = protocol.count_multiplicities(&w, &statement);
     let msg1 = protocol.prove_round1(&w, &m);
     let r = protocol.verify_round1(&msg1);
     let msg2 = protocol.prove_round2(&r, &msg1, &statement);
     assert!(protocol.verify_round2(&msg1, &msg2, &statement));
+    println!("witness length {:?}", l);
 }
 
 const PUZZLE_DESCRIPTION: &str = r"
